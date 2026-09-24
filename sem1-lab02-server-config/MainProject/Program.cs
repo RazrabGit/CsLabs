@@ -44,7 +44,7 @@ public class Program
 
         Console.WriteLine("Set max players:");
         if (byte.TryParse(Console.ReadLine(), out byte maxPlayers)) serverConfig.maxPlayers = maxPlayers; 
-        else serverConfig.maxPlayers = (byte)rand.Next(1, 128);
+        else serverConfig.maxPlayers = (byte)rand.Next(1, 129);
 
         Console.WriteLine("Choose map");
         Console.WriteLine("0. Savanna");
@@ -54,22 +54,26 @@ public class Program
         Console.WriteLine("4. Test01");
         Console.WriteLine("5. Sewerage Beta");
         if (byte.TryParse(Console.ReadLine(), out byte map)) serverConfig.map = (EGameMaps)map;
-        else serverConfig.map = (EGameMaps)rand.Next(0, 5);
+        else serverConfig.map = (EGameMaps)rand.Next(0, 6);
 
         Console.WriteLine("Choose server accessibility");
         Console.WriteLine("0. Public");
         Console.WriteLine("1. For friedns");
         Console.WriteLine("2. Private");
         if (byte.TryParse(Console.ReadLine(), out byte accessibility)) serverConfig.accessibility = (EServerAccessibility)accessibility;
-        else serverConfig.accessibility = (EServerAccessibility)rand.Next(0, 2);
+        else serverConfig.accessibility = (EServerAccessibility)rand.Next(0, 3);
 
         Console.WriteLine("Does server have password?");
         Console.WriteLine("0. No");
         Console.WriteLine("1. Yes");
         if (bool.TryParse(Console.ReadLine() == "1" ? "True" : "False", out bool bHave)) serverConfig.bHavePassword = bHave;
 
-        Console.WriteLine("Set password:");
-        serverConfig.password = Console.ReadLine();
+        if (serverConfig.bHavePassword)
+        {
+            Console.WriteLine("Set password:");
+            serverConfig.password = Console.ReadLine();
+        }
+        else serverConfig.password = "";
 
         Console.WriteLine("Choose gamemode");
         Console.WriteLine("0. Defuse");
@@ -79,16 +83,16 @@ public class Program
         Console.WriteLine("4. Battle royal");
         Console.WriteLine("5. Default");
         if (byte.TryParse(Console.ReadLine(), out byte gamemode)) serverConfig.gamemode = (EGamemode)gamemode;
-        else serverConfig.gamemode = (EGamemode)rand.Next(0, 5);
+        else serverConfig.gamemode = (EGamemode)rand.Next(0, 6);
     }
 
    static void Randomize(ref SServerProperties serverConfig)
    {
        Random rand = new Random();
-       serverConfig.maxPlayers = (byte)rand.Next(1, 128);
-       serverConfig.map = (EGameMaps)rand.Next(0, 5);
-       serverConfig.bHavePassword = rand.Next(0, 1) == 0 ? true : false;
-       byte randomPassword = (byte)rand.Next(0, 3);
+       serverConfig.maxPlayers = (byte)rand.Next(1, 129);
+       serverConfig.map = (EGameMaps)rand.Next(0, 6);
+       serverConfig.bHavePassword = rand.Next(0, 2) == 1 ? true : false;
+       byte randomPassword = (byte)rand.Next(0, 4);
        switch (randomPassword)
        {
            case 0:
@@ -104,8 +108,8 @@ public class Program
                 serverConfig.password = "";
                 break;
         }
-       serverConfig.accessibility = (EServerAccessibility)rand.Next(0, 2);
-       serverConfig.gamemode = (EGamemode)rand.Next(0, 5);
+       serverConfig.accessibility = (EServerAccessibility)rand.Next(0, 3);
+       serverConfig.gamemode = (EGamemode)rand.Next(0, 6);
     }
 
     public static bool CheckMaxPlayers(byte maxPlayers, EGamemode gamemode, out string message)
