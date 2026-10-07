@@ -106,12 +106,10 @@ public class Program
 
     public static string GetServerStatus(LogEntry[] entries)
     {
-        // Можно было в цикле отдельную проверку сделать и брейкать, но я решил выпендриться
         if (entries.Any(t => t.Level == "Fatal" && t.Category == "Server")) return "КРИТИЧЕСКАЯ ОШИБКА: сервер остановлен";
-        for (int i = 0; i < entries.Length; i++)
-        {
-            if (entries[i].Level == "Warning" || entries[i].Level == "Fatal") return "Есть ошибки: требуется проверка";
-        }
+        
+        if (entries.Any(t => t.Level == "Fatal" || t.Level == "Error")) return "Есть ошибки: требуется проверка";
+        
         return "Сервер работает штатно";
     }
 
