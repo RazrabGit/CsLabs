@@ -72,8 +72,10 @@ public class Program
         }
         
         UpdateLine(19, $"CPU: {cpu}%");
-        UpdateLine(20, $"RAM: {ram}%");
-        UpdateLine(21, $"Temperature: {temperature} °C");  
+        UpdateLine(20, "");
+        UpdateLine(21, "");
+        UpdateLine(22, $"RAM: {ram}%");
+        UpdateLine(23, $"Temperature: {temperature} °C");  
     }
 
     private static void UpdateLine(int line, string text)
