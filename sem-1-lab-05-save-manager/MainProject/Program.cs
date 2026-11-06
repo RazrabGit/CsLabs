@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Globalization;
-using System.IO;
-using System.Net.Http.Headers;
-using System.Runtime.Intrinsics.Arm;
 
 namespace lab05;
 
@@ -45,18 +41,63 @@ public class SaveData
 public class Program
 {
     public static List<SaveEntry> entries = null;
-    public static string _indexPath = "index.json";
-    public static string _savesDirectory = "saves/";
-    public static string _backupsDirectory = "backups/";
-    public static string _logsDirectory = "logs/";
-    public static List<string> log = new List<string>();
+    private static string _indexPath = "index.json";
+    private static string _savesDirectory = "saves/";
+    private static string _backupsDirectory = "backups/";
+    private static string _logsDirectory = "logs/";
+    private static List<string> log = new List<string>();
 
     public static void Main()
     {
         entries = LoadIndex(_indexPath);
         if (entries == null) return;
 
-        GoToMainMenu();
+        while (true)
+        {
+            Console.Clear();
+
+            Console.WriteLine("");
+            Console.WriteLine("1. Show save list.");
+            Console.WriteLine("2. Show save data.");
+            Console.WriteLine("3. Edit save data.");
+            Console.WriteLine("4. Create backup.");
+            Console.WriteLine("5. Restore backup.");
+            Console.WriteLine("6. Delete save.");
+            Console.WriteLine("7. Exit.");
+            Console.WriteLine("");
+
+            bool bChoiceValid = int.TryParse(Console.ReadLine(), out int choice);
+
+            if (!bChoiceValid || choice <= 0 || choice > 7) continue;
+
+            switch (choice)
+            {
+                case 1:
+                    ShowSaveList();
+                    break;
+                case 2:
+                    ShowSaveData();
+                    break;
+                case 3:
+                    EditSaveData();
+                    break;
+                case 4:
+                    CreateBackupFromMenu();
+                    break;
+                case 5:
+                    RestoreBackupFromMenu();
+                    break;
+                case 6:
+                    DeleteSaveFromMenu();
+                    break;
+                case 7:
+                    if (!Directory.Exists(_logsDirectory)) Directory.CreateDirectory(_logsDirectory);
+
+                    File.WriteAllLines($"{_logsDirectory}/latest.log", log);
+                    Environment.Exit(0);
+                    break;
+            }
+        }
         
     }
 
@@ -143,11 +184,7 @@ public class Program
         {
             Console.WriteLine($" - {save.Inventory[i]}");
         }
-        Console.WriteLine("");
-
-        Console.WriteLine("Enter any key or leave empty to go back");
-
-        if (Console.ReadLine() != null) GoToMainMenu();
+        EnterAnyKey();
     }
 
     public static SaveEntry FindByName(List<SaveEntry> entries, string name)
@@ -248,59 +285,9 @@ public class Program
         }
     }
 
-    public static void GoToMainMenu()
-    {
-        Console.Clear();
-
-        Console.WriteLine("");
-        Console.WriteLine("1. Show save list.");
-        Console.WriteLine("2. Show save data.");
-        Console.WriteLine("3. Edit save data.");
-        Console.WriteLine("4. Create backup.");
-        Console.WriteLine("5. Restore backup.");
-        Console.WriteLine("6. Delete save.");
-        Console.WriteLine("7. Exit.");
-        Console.WriteLine("");
-
-        bool bRightChoise = int.TryParse(Console.ReadLine(), out int choise);
-
-        if (!bRightChoise) GoToMainMenu();
-
-        if (choise <= 0 || choise > 7) GoToMainMenu();
-
-        switch (choise)
-        {
-            case 1:
-                ShowSaveList();
-                break;
-            case 2:
-                ShowSaveData();
-                break;
-            case 3:
-                EditSaveData();
-                break;
-            case 4:
-                CreateBackupFromMenu();
-                break;
-            case 5:
-                RestoreBackupFromMenu();
-                break;
-            case 6:
-                DeleteSaveFromMenu();
-                break;
-            case 7:
-                if (!Directory.Exists(_logsDirectory)) Directory.CreateDirectory(_logsDirectory);
-
-                File.WriteAllLines($"{_logsDirectory}/latest.log", log);
-                Environment.Exit(0);
-                break;
-        }
-    }
-
     public static void ShowSaveList()
     {
         Console.Clear();
-
         Console.WriteLine("");
 
         for (int i = 0; i < entries.Count; i++)
@@ -308,10 +295,7 @@ public class Program
             Console.WriteLine($"{i}. {entries[i].Name}, File: {entries[i].File}, Updated at: {entries[i].UpdatedAt}");
         }
 
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
+        EnterAnyKey();
     }
 
     public static void GetSaveAndEntryByNameFromMenu(out SaveData save, out SaveEntry entry)
@@ -358,19 +342,12 @@ public class Program
 
         if (save == null || entry == null)
         {
-            Console.WriteLine("");
-            Console.WriteLine("Enter any key or leave empty to go back");
-            if (Console.ReadLine() != null) GoToMainMenu();
+            EnterAnyKey();
             return;
         }
 
         WriteLogLine(entry, EOperationType.CheckSave);
         PrintSave(entry, save);
-
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
     }
 
     public static void EditSaveData()
@@ -379,51 +356,49 @@ public class Program
 
         if (save == null || entry == null)
         {
-            Console.WriteLine("");
-            Console.WriteLine("Enter any key or leave empty to go back");
-            if (Console.ReadLine() != null) GoToMainMenu();
+            EnterAnyKey();
             return;
         }
 
         Console.Clear();
         Console.WriteLine("Enter new Map (leave empty to leave without edit)");
-        string mapStr = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(mapStr)) mapStr = save.Map;
+        string mapInput = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(mapInput)) mapInput = save.Map;
 
         Console.Clear();
         Console.WriteLine("Enter new PosX (leave empty or not an integer to leave without edit)");
-        string PosXStr = Console.ReadLine();
-        bool bCorrectPosX = int.TryParse(PosXStr, out int posX);
+        string posXInput = Console.ReadLine();
+        bool bCorrectPosX = int.TryParse(posXInput, out int posX);
         if (!bCorrectPosX) posX = save.Position.X;
 
         Console.Clear();
         Console.WriteLine("Enter new PosY (leave empty or not an integer to leave without edit)");
-        string PosYStr = Console.ReadLine();
-        bool bCorrectPosY = int.TryParse(PosYStr, out int posY);
+        string posYInput = Console.ReadLine();
+        bool bCorrectPosY = int.TryParse(posYInput, out int posY);
         if (!bCorrectPosY) posY = save.Position.Y;
 
         Console.Clear();
         Console.WriteLine("Enter new Health (leave empty or not an integer to leave without edit)");
-        string healthStr = Console.ReadLine();
-        bool bCorrectHealth = int.TryParse(healthStr, out int health);
+        string healthInput = Console.ReadLine();
+        bool bCorrectHealth = int.TryParse(healthInput, out int health);
         if (!bCorrectHealth) health = save.Health;
 
-        List<string> list = save.Inventory;
+        List<string> inventory = save.Inventory;
 
         Console.Clear();
         Console.WriteLine("Do you want to edit inventory?");
         Console.WriteLine("1. Yes");
         Console.WriteLine("2. No");
-        bool bRightChoise = int.TryParse(Console.ReadLine(), out int choise);
-        if (bRightChoise && choise == 1)
+        bool bChoiseValid = int.TryParse(Console.ReadLine(), out int choice);
+        if (bChoiseValid && choice == 1)
         {
-            list = ChangeInventory(new List<string>());
+            inventory = ChangeInventory(new List<string>());
         }
 
-        save.Map = mapStr;
+        save.Map = mapInput;
         save.Position = new Position(posX, posY);
         save.Health = health;
-        save.Inventory = list;
+        save.Inventory = inventory;
 
         SaveGame(_savesDirectory, entry, save);
         SaveIndex(_indexPath, entries);
@@ -431,28 +406,27 @@ public class Program
 
         Console.Clear();
         Console.WriteLine("Your game is saved.");
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
+        EnterAnyKey();
     }
 
     public static List<string> ChangeInventory(List<string> inventory)
     {
-        Console.Clear();
-        Console.WriteLine("Do you want to add new item?");
-        Console.WriteLine("1. Yes");
-        Console.WriteLine("2. No (end of editing inventory)");
-        bool bRightChoise = int.TryParse(Console.ReadLine(), out int choise);
-        if (!bRightChoise) return inventory;
-        if (choise < 1 || choise >= 2) return inventory;
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("Do you want to add new item?");
+            Console.WriteLine("1. Yes");
+            Console.WriteLine("2. No (end of editing inventory)");
+            bool bChoiceValid = int.TryParse(Console.ReadLine(), out int choice);
+            if (!bChoiceValid || choice < 1 || choice > 2) continue;
 
-        Console.Clear();
-        Console.WriteLine("Enter your item:");
-        string item = Console.ReadLine();
-        if (item != null) inventory.Add(item);
+            if (choice == 2) return inventory;
 
-        return ChangeInventory(inventory);
+            Console.Clear();
+            Console.WriteLine("Enter your item:");
+            string item = Console.ReadLine();
+            if (item != null) inventory.Add(item);
+        } 
     }
 
     public static void CreateBackupFromMenu()
@@ -461,20 +435,14 @@ public class Program
 
         if (entry == null)
         {
-            Console.WriteLine("");
-            Console.WriteLine("Enter any key or leave empty to go back");
-            if (Console.ReadLine() != null) GoToMainMenu();
+            EnterAnyKey();
             return;
         }
 
         Console.Clear();
         CreateBackup(_savesDirectory, _backupsDirectory, entry);
         WriteLogLine(entry, EOperationType.CreateBackup);
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
+        EnterAnyKey();
     }
 
     public static void RestoreBackupFromMenu()
@@ -483,9 +451,7 @@ public class Program
 
         if (entry == null)
         {
-            Console.WriteLine("");
-            Console.WriteLine("Enter any key or leave empty to go back");
-            if (Console.ReadLine() != null) GoToMainMenu();
+            EnterAnyKey();
             return;
         }
 
@@ -493,11 +459,7 @@ public class Program
         RestoreBackup(_savesDirectory, _backupsDirectory, entry);
         SaveIndex(_indexPath, entries);
         WriteLogLine(entry, EOperationType.RestoreBackup);
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
+        EnterAnyKey();
     }
 
     public static void DeleteSaveFromMenu()
@@ -505,9 +467,7 @@ public class Program
         GetEntryByNameFromMenu(out SaveEntry entry);
         if (entry == null)
         {
-            Console.WriteLine("");
-            Console.WriteLine("Enter any key or leave empty to go back");
-            if (Console.ReadLine() != null) GoToMainMenu();
+            EnterAnyKey();
             return;
         }
 
@@ -515,14 +475,18 @@ public class Program
         DeleteSave(_savesDirectory, _indexPath, entries, entry);
         WriteLogLine(entry, EOperationType.DeleteSave);
         Console.WriteLine("Save entry deleted.");
-        Console.WriteLine("");
-        Console.WriteLine("Enter any key or leave empty to go back");
-        if (Console.ReadLine() != null) GoToMainMenu();
-        return;
+        EnterAnyKey();
     }
 
     public static void WriteLogLine(SaveEntry entry, EOperationType type)
     {
         log.Add($"[{DateTime.Now}] {entry.Name}: {type}");
+    }
+
+    private static void EnterAnyKey()
+    {
+        Console.WriteLine("");
+        Console.WriteLine("Enter any key or leave empty to go back");
+        Console.ReadLine();
     }
 }
