@@ -1,4 +1,7 @@
-﻿namespace lab09;
+﻿using System.Reflection.Emit;
+using System.Xml.Linq;
+
+namespace lab09;
 
 public enum ECharacterClasses
 {
@@ -13,13 +16,13 @@ public class Character
 {
     public readonly string name;
     public readonly ECharacterClasses characterClass;
-    private float maxHealth;
+    public readonly float maxHealth;
     private float health;
     private float experience;
     private int level;
     private int gold;
-    private int power;
-    private int defense;
+    public readonly int power;
+    public readonly int defense;
     public Inventory inventory = new Inventory();
 
     public Character(string name, float maxHealth, int power, int defense, ECharacterClasses characterClass)
@@ -75,18 +78,24 @@ public class Character
         gold -= value;
     }
 
-    public void PrintInfo()
+    public float GetHealth()
     {
-        Console.WriteLine($"Name: {name}");
-        Console.WriteLine($"Class: {characterClass}");
-        Console.WriteLine($"Health: {health}/{maxHealth}");
-        Console.WriteLine($"Experience: {experience}");
-        Console.WriteLine($"Level: {level}");
-        Console.WriteLine($"Gold: {gold}G");
-        Console.WriteLine($"Power: {power}");
-        Console.WriteLine($"Defense: {defense}");
-        Console.WriteLine("Inventory: ");
-        inventory.PrintInfo();
+        return health;
+    }
+
+    public float GetExp()
+    {
+        return experience;
+    }
+
+    public int GetLevel()
+    {
+        return level;
+    }
+
+    public int GetGold()
+    {
+        return gold;
     }
 }
 
@@ -110,14 +119,11 @@ public class Inventory
         items.RemoveAt(id);
     }
 
-    public void PrintInfo()
+    public List<ItemStack> GetItems()
     {
-        for (int i = 0; i < items.Count; i++)
-        {
-            var item = items[i];
-            Console.WriteLine($" {i}. {item.name} x{item.count}"); 
-        }
+        return items;
     }
+
 }
 
 public struct ItemStack
@@ -172,7 +178,7 @@ class Program
             if (choice == 1)
             {
                 Console.Clear();
-                character.PrintInfo();
+                PrintInfo();
                 EnterAnyKey();
             }
             if (choice == 0) return;
@@ -261,6 +267,31 @@ class Program
             Console.WriteLine("Operation successful");
             EnterAnyKey();
             return;
+        }
+
+
+    }
+
+    public static void PrintInfo()
+    {
+        Console.WriteLine($"Name: {character.name}");
+        Console.WriteLine($"Class: {character.characterClass}");
+        Console.WriteLine($"Health: {character.GetHealth()}/{character.maxHealth}");
+        Console.WriteLine($"Experience: {character.GetExp()}");
+        Console.WriteLine($"Level: {character.GetLevel()}");
+        Console.WriteLine($"Gold: {character.GetGold()}G");
+        Console.WriteLine($"Power: {character.power}");
+        Console.WriteLine($"Defense: {character.defense}");
+        Console.WriteLine("Inventory: ");
+        PrintInventoryInfo();
+    }
+
+    public static void PrintInventoryInfo()
+    {
+        for (int i = 0; i < character.inventory.GetItems().Count; i++)
+        {
+            var item = character.inventory.GetItems()[i];
+            Console.WriteLine($" {i}. {item.name} x{item.count}");
         }
     }
 
