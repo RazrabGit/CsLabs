@@ -18,18 +18,21 @@ public class Server
 
     public void ConnectPlayer(Player player)
     {
-        if (player == null) return;
+        if (player == null) throw new ArgumentNullException("player", "Player doesn't exist");
 
         if (!playersByDict.ContainsKey(player.login)) playersByDict.Add(player.login, player);
         if (!playersByList.Contains(player)) playersByList.Add(player);
 
-        Lobby lobby = lobbies[0];
-        lobby.ConnectPlayer(player);
+        if (player.currentLobby == null)
+        { 
+            Lobby lobby = lobbies[0];
+            lobby.ConnectPlayer(player);
+        }
     }
 
     public void DisconnectPlayer(Player player)
     {
-        if (player == null) return;
+        if (player == null) throw new ArgumentNullException("player", "Player doesn't exist");
 
         if (player.currentLobby != null) player.currentLobby.DisconnectPlayer(player);
 
@@ -39,7 +42,8 @@ public class Server
 
     public void TransferPlayerToLobby(Player player, Lobby lobby)
     {
-        if (player == null || lobby == null) return;
+        if (player == null) throw new ArgumentNullException("player","Player doesn't exist");
+        if (lobby == null) throw new ArgumentNullException("lobby", "Lobby doesn't exist");
 
         if (player.currentLobby != null) player.currentLobby.DisconnectPlayer(player);
         lobby.ConnectPlayer(player);
@@ -96,7 +100,7 @@ public class Lobby
 
     public void ConnectPlayer(Player player)
     {
-        if (player == null) return;
+        if (player == null) throw new ArgumentNullException("player", "Player doesn't exist");
 
         if (!playersByList.Contains(player)) playersByList.Add(player);
         if (!playersByDict.ContainsKey(player.login)) playersByDict.Add(player.login, player);
@@ -105,7 +109,7 @@ public class Lobby
 
     public void DisconnectPlayer(Player player)
     {
-        if (player == null) return;
+        if (player == null) throw new ArgumentNullException("player", "Player doesn't exist");
 
         playersByList.Remove(player);
         playersByDict.Remove(player.login);
@@ -236,8 +240,16 @@ class Program
     {
         Console.Clear();
         foreach (var(login, player) in players)
-        {            
-            server.ConnectPlayer(player);
+        {
+            try
+            {
+                server.ConnectPlayer(player);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{login} isn't connected: {ex.Message}");
+            }
+
         }
         Console.WriteLine("Players connected");
         EnterAnyKey();
@@ -277,7 +289,16 @@ class Program
                 return;
             }
 
-            server.ConnectPlayer(player);
+            try
+            {
+                server.ConnectPlayer(player);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{player.login} isn't connected: {ex.Message}");
+                EnterAnyKey();
+                return;
+            }
             Console.WriteLine("Player connected");
             EnterAnyKey();
             return;
@@ -315,7 +336,16 @@ class Program
                 return;
             }
 
-            server.DisconnectPlayer(player);
+            try 
+            {
+                server.DisconnectPlayer(player);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{player.login} isn't disconnected: {ex.Message}");
+                EnterAnyKey();
+                return;
+            }
             Console.WriteLine("Player disconnected");
             EnterAnyKey();
             return;
@@ -363,9 +393,18 @@ class Program
                 return;
             }
 
-            server.TransferPlayerToLobby(player, lobby);
+            try
+            {
+                server.TransferPlayerToLobby(player, lobby);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"{player.login} isn't transferred: {e.Message}");
+                EnterAnyKey();
+                return;
+            }
 
-            Console.WriteLine("Player transfered");
+            Console.WriteLine("Player transferred");
             EnterAnyKey();
             return;
         }

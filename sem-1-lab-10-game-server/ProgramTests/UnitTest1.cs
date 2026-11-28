@@ -1,6 +1,5 @@
-﻿using lab10;
-using NUnit.Framework;
-using System.Numerics;
+﻿using NUnit.Framework;
+using lab10;
 
 namespace sem_1_lab_10_tests;
 
@@ -65,14 +64,12 @@ public class ServerTests
 {
     private Server _server;
     private Player _player1;
-    private Player _player2;
 
     [SetUp]
     public void SetUp()
     {
         _server = new Server();
         _player1 = new Player("player1", 80f, 20, true);
-        _player2 = new Player("player2", 90f, 30, false);
     }
 
     [Test]
@@ -100,13 +97,43 @@ public class ServerTests
         _server.ConnectPlayer(_player1);
 
         Assert.That(_server.GetPlayersList(), Has.Count.EqualTo(1));
+        Assert.That(_server.GetLobby(0)!.GetPlayersList(), Has.Count.EqualTo(1));
+        Assert.That(_player1.currentLobby, Is.SameAs(_server.GetLobby(0)));
     }
 
     [Test]
-    public void ConnectPlayer_NullDoesNotThrow()
+    public void ConnectPlayer_AfterTransfer_KeepsPlayerInTransferredLobby()
     {
-        Assert.DoesNotThrow(() => _server.ConnectPlayer(null!));
-        Assert.That(_server.GetPlayersList(), Is.Empty);
+        _server.ConnectPlayer(_player1);
+        _server.CreateLobby();
+        var lobby1 = _server.GetLobby(1)!;
+        _server.TransferPlayerToLobby(_player1, lobby1);
+
+        _server.ConnectPlayer(_player1);
+
+        Assert.That(_player1.currentLobby, Is.SameAs(lobby1));
+        Assert.That(lobby1.GetPlayersList(), Does.Contain(_player1));
+        Assert.That(_server.GetLobby(0)!.GetPlayersList(), Does.Not.Contain(_player1));
+        Assert.That(_server.GetPlayersList(), Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void ConnectPlayer_AfterDisconnect_ConnectsAgainToDefaultLobby()
+    {
+        _server.ConnectPlayer(_player1);
+        _server.DisconnectPlayer(_player1);
+
+        _server.ConnectPlayer(_player1);
+
+        Assert.That(_server.GetPlayersList(), Has.Count.EqualTo(1));
+        Assert.That(_player1.currentLobby, Is.SameAs(_server.GetLobby(0)));
+    }
+
+    [Test]
+    public void ConnectPlayer_Null_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => _server.ConnectPlayer(null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("player"));
     }
 
     [Test]
@@ -130,9 +157,10 @@ public class ServerTests
     }
 
     [Test]
-    public void DisconnectPlayer_NullDoesNotThrow()
+    public void DisconnectPlayer_Null_ThrowsArgumentNullException()
     {
-        Assert.DoesNotThrow(() => _server.DisconnectPlayer(null!));
+        var ex = Assert.Throws<ArgumentNullException>(() => _server.DisconnectPlayer(null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("player"));
     }
 
     [Test]
@@ -210,10 +238,19 @@ public class ServerTests
     }
 
     [Test]
-    public void TransferPlayerToLobby_NullArgumentsDoNotThrow()
+    public void TransferPlayerToLobby_NullPlayer_ThrowsArgumentNullException()
     {
-        Assert.DoesNotThrow(() => _server.TransferPlayerToLobby(null!, _server.GetLobby(0)!));
-        Assert.DoesNotThrow(() => _server.TransferPlayerToLobby(_player1, null!));
+        var lobby = _server.GetLobby(0)!;
+
+        var ex = Assert.Throws<ArgumentNullException>(() => _server.TransferPlayerToLobby(null!, lobby));
+        Assert.That(ex!.ParamName, Is.EqualTo("player"));
+    }
+
+    [Test]
+    public void TransferPlayerToLobby_NullLobby_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => _server.TransferPlayerToLobby(_player1, null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("lobby"));
     }
 
     [Test]
@@ -259,10 +296,10 @@ public class LobbyTests
     }
 
     [Test]
-    public void ConnectPlayer_NullDoesNotThrow()
+    public void ConnectPlayer_Null_ThrowsArgumentNullException()
     {
-        Assert.DoesNotThrow(() => _lobby.ConnectPlayer(null!));
-        Assert.That(_lobby.GetPlayersList(), Is.Empty);
+        var ex = Assert.Throws<ArgumentNullException>(() => _lobby.ConnectPlayer(null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("player"));
     }
 
     [Test]
@@ -286,9 +323,10 @@ public class LobbyTests
     }
 
     [Test]
-    public void DisconnectPlayer_NullDoesNotThrow()
+    public void DisconnectPlayer_Null_ThrowsArgumentNullException()
     {
-        Assert.DoesNotThrow(() => _lobby.DisconnectPlayer(null!));
+        var ex = Assert.Throws<ArgumentNullException>(() => _lobby.DisconnectPlayer(null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("player"));
     }
 
     [Test]
